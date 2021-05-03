@@ -2,7 +2,7 @@ FROM ubuntu:focal
 MAINTAINER Ugur Cayoglu <cyglu@aol.com>
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get install -y --no-install-recommends\
 	wget \
 	gnupg \
 	ca-certificates \
@@ -11,16 +11,15 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	sudo \
 	lsb-release
 
-RUN curl -O http://nginx.org/keys/nginx_signing.key && apt-key add nginx_signing.key
-RUN echo "deb http://nginx.org/packages/mainline/ubuntu/ $(lsb_release -sc) nginx" >> /etc/apt/sources.list
-RUN echo "deb-src http://nginx.org/packages/mainline/ubuntu/ $(lsb_release -sc) nginx" >> /etc/apt/sources.list
-
 RUN wget https://openresty.org/package/pubkey.gpg -O openresty_signing.key  && apt-key add openresty_signing.key
 RUN echo "deb http://openresty.org/package/ubuntu $(lsb_release -sc) main" \
     | sudo tee /etc/apt/sources.list.d/openresty.list
 
-RUN apt-get update -y && apt-get install nginx luarocks openresty -y
-
+RUN apt-get update && apt-get install -y \
+	luarocks \
+	openresty && \
+	apt-get clean autoclean && apt-get autoremove --yes && \
+	rm -rf /var/lib/apt/lists/*
 
 # All configuration and logs are saved here
 WORKDIR /nginx
