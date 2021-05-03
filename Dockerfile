@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
 # All configuration and logs are saved here
 WORKDIR /nginx
 RUN mkdir /nginx/logs /nginx/conf
-COPY nginx.conf /nginx/conf/nginx.conf
+COPY nginx/conf/nginx.conf /nginx/conf/nginx.conf
 
 # Output logs to stderr/stdout for fetching by docker logs
 RUN ln -sf /dev/stderr /nginx/logs/error.log
