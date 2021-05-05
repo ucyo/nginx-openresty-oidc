@@ -1,0 +1,56 @@
+worker_processes 1;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  resolver local=on;
+  lua_package_path "/usr/local/share/lua/5.3/?.lua;;";
+  lua_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+  lua_ssl_verify_depth 5;
+  lua_shared_dict discovery 1m;
+  lua_shared_dict jwks 1m;
+  server {
+    listen ${SERVER_PORT};
+    server_name ${SERVER_NAME};
+    expires    0;
+    add_header  Cache-Control private;
+
+    access_by_lua_block {
+       local opts = {
+           discovery = "${OIDC_PROVIDER_DISCOVERY_ENDPOINT}",
+           introspection_endpoint_auth_method = "${OIDC_PROVIDER_INTROSPECTION_METHOD}",
+           client_id = "${OIDC_CLIENT_ID}",
+           client_secret = "${OIDC_CLIENT_SECRET}",
+           scope = "openid email profile",
+           redirect_uri_scheme = "http", 
+           redirect_uri_path = "${OIDC_REDIRECT_PATH}",
+           -- redirect_after_logout_uri = 
+           redirect_after_logout_with_id_token_hint = false,
+           -- logout_path =
+           session_contents = { id_token = true, access_token = true },
+           session_secret = "${SESSION_SECRET}"
+       }
+       local res, err = require("resty.openidc").introspect(opts)
+       if err then
+           ngx.status = 403
+           ngx.say(err)
+           ngx.exit(ngx.HTTP_FORBIDDEN)
+           -- local res, err = require("resty.openidc").authenticate(opts)
+           -- if err then
+           --     ngx.status = 403
+           --     ngx.say(err)
+           --     ngx.exit(ngx.HTTP_FORBIDDEN)
+           -- end
+       elseif res then
+           -- ngx.log(ngx.ERR, "User ID Token: ", res.id_token.sub)
+           -- ngx.log(ngx.ERR, "User Access Token: ", res.access_token)
+       end
+    }
+
+    include locations/root.conf;
+    
+    
+    }
+}
