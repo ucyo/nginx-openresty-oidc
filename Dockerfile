@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends\
 	sudo \
         make \
         gcc \
+        gettext-base \
         libreadline-dev \
 	lsb-release
 
@@ -40,7 +41,8 @@ RUN luarocks install lua-resty-openidc
 # All configuration and logs are saved here
 WORKDIR /nginx
 RUN mkdir /nginx/logs /nginx/conf
-COPY nginx/conf/nginx.conf /nginx/conf/nginx.conf
+COPY nginx/conf/nginx.conf.template /nginx/conf/nginx.conf.template
+COPY start.sh /nginx/start.sh
 
 # Output logs to stderr/stdout for fetching by docker logs
 RUN ln -sf /dev/stderr /nginx/logs/error.log
